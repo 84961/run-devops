@@ -1,0 +1,139 @@
+docker build -f Shopping.Client\Dockerfile -t shoppingapp .
+
+docker run -dt  -p 5012:80 --name myapp shoppingapp
+
+docker tag imageid rithvikapr24/shoppingapp
+
+docker push rithvikapr24/shoppingapp:latest
+
+docker pull mongo
+
+docker run -d -p 27017:27017 --name shopping-mongo mongo
+
+docker logs -f shopping-mongo
+
+#start interatcive terminal 
+docker exec -it shopping-mongo /bin/bash
+
+docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+docker-compose -f .\docker-compose.yml -f .\docker-compose.override.yml stop
+docker-compose -f .\docker-compose.yml -f .\docker-compose.override.yml down
+
+#to rebuild all images
+docker-compose -f .\docker-compose.yml -f .\docker-compose.override.yml up --build
+
+kubectl apply -f .\mongo-secret.yaml
+kubectl get secret
+kubectl get pod --watch
+kubectl get service
+kubectl describe service servicename
+kubectl get pod
+kubectl get pod pdname -o wide
+kubectl describe pod podname
+kubectl logs podname
+
+kubectl config get-contexts
+k config current-context
+k config use-context nameofcontext
+
+az  login
+az set -s subid
+
+
+--
+Create a resource group
+az group create --name myResourceGroup --location westeurope
+--
+Create an Azure Container Registry
+az acr create --resource-group myResourceGroup --name shoppingacr --sku Basic
+--
+Enable Admin Account for ACR Pull
+az acr update -n shoppingacr --admin-enabled true
+--
+Log in to the container registry
+az acr login --name shoppingacr
+Login Succeeded
+--
+Tag a container image
+
+get the login server address
+az acr list --resource-group myResourceGroup --query "[].{acrLoginServer:loginServer}" --output table
+shoppingacr.azurecr.io
+--
+Tag your images
+
+docker tag shoppingapi:latest shoppingacr.azurecr.io/shoppingapi:v1
+docker tag shoppingclient:latest shoppingacr.azurecr.io/shoppingclient:v1
+
+Check
+docker images
+--
+Push images to registry
+
+docker push shoppingacr.azurecr.io/shoppingapi:v1
+docker push shoppingacr.azurecr.io/shoppingclient:v1
+--
+List images in registry
+az acr repository list --name shoppingacr --output table
+
+Result
+shoppingapi
+shoppingclient
+--
+See tags
+az acr repository show-tags --name shoppingacr --repository shoppingclient --output table
+
+Result
+v1
+--
+Create AKS cluster with attaching ACR
+az aks create --resource-group myResourceGroup --name myAKSCluster --node-count 1 --generate-ssh-keys --attach-acr shoppingacr
+
+--
+Install the Kubernetes CLI
+az aks install-cli
+--
+Connect to cluster using kubectl
+az aks get-credentials --resource-group myResourceGroup --name myAKSCluster
+
+To verify;
+kubectl get nodes
+kubectl get all
+--
+Check Kube Config
+
+kubectl config get-contexts
+kubectl config current-context
+kubectl config use-context gcpcluster-k8s-1
+	Switched to context "gcpcluster-k8s-1"
+
+kubectl create secret docker-registry acr-secret --docker-server=shoppingacr.azurecr.io 
+--docker-username=shoppingacr --docker-password=psswd
+kubectl get secret
+#update in deployment yaml file imagepull secret to the one which we created above
+--
+Deploy microservices to AKS
+
+kubectl apply -f .\aks\
+--
+Clean All AKS and Azure Resources
+
+az group delete --name myResourceGroup --yes --no-wait
+
+#external ip will be generated only for those service with loadbalancer type
+kubectl get svc
+k get pod
+k describe pod podname
+
+k get deployment
+k get all
+#get the long name of the deploymenta nd provide it
+k scale --replicas=3 deploymentname
+
+az aks show --resource-group rgname --name aksclname --query kubernetesVersion --output table
+
+#get auto scale def
+k get hpa
+
+#to find issue with a pod
+k describe pod podname
